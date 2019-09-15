@@ -7,66 +7,119 @@ import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import java.io.File
 
-object Simulation extends App {
+class Creature(x: Int,
+               y: Int,
+               reproductive: Boolean,
+               illnesses: Boolean,
+               Group: String){
+  val rnd = new scala.util.Random
+  var X: Int = x
+  var Y: Int = y
+  var health = 1000
+  val range = 100
+  val repFunction: Boolean = reproductive
+  val illFunction: Boolean = illnesses
+  val group: String = Group
 
-//  val img = {
-//   val i = new BufferedImage(200,200,BufferedImage.TYPE_INT_ARGB)
-//   val g = i.createGraphics()
-//    g.setPaint(Color.blue)
-//    g.fillRect(0,0,30,30)
-//    i
-//  }
-//
-//  for(x <- 1 to 20; y <- 1 to 20) {
-//    img.setRGB(x,y,0xffff0000)
-//  }
-
-  //val artImage = ImageIO.read(new File("/home/cooper/Simulation/src/main/images/rabbit.png"))
-  //val dots = Array.fill(30)(new java.awt.Point(100+util.Random.nextInt(300), 100+util.Random.nextInt(300)))
-  val dots = Array.fill(30)(new java.awt.Point(335, 335))
-
-  val panel = new Panel {
-    override def paint(g: Graphics2D): Unit = { //единственное место которое напрягает это вот это, принимает обьект и
-      //сразу же его рисует при том что функция paint сама по себе нигде не вызывается. Она по 1 обрабатывает обьекты или
-      //же все сразу, если все сразу то тогда как она определяет к какому обьекту доступатся и какую функцию на каком
-      //обьекте вызывать?
-      //g.drawImage(img,335,335,null)
-      //g.drawImage(artImage,0,0,null)
-      g.setPaint(Color.white)
-      g.fill(new Rectangle2D.Double(0,0,size.width,size.height))
-      g.setPaint(Color.black)
-      for(p <- dots){
-        g.fill(new Ellipse2D.Double(p.x-2,p.y-2,5,5))
-      }
-    }
-    preferredSize = new Dimension(700,700)
+  def generateReadiness: Boolean = {
+    -range + rnd.nextInt(range-70) == -range + rnd.nextInt(range-70)
   }
 
-  val timer = new javax.swing.Timer(1,Swing.ActionListener(
-    ection => {
-      for (p <- dots) {
-        p.x += util.Random.nextInt(3) - 1
-        p.y += util.Random.nextInt(3) - 1
-      }
-      panel.repaint()
-    }))
+  def generateIllnesses: Boolean = {
+    -range + rnd.nextInt(range-67) == -range + rnd.nextInt(range-67)
+  }
 
-  val frame = new MainFrame {
+  def randomMove: Unit = {
+    val moveStep_forX = -1 + rnd.nextInt(3)
+    val moveStep_forY = -1 + rnd.nextInt(3)
+    X = X + moveStep_forX
+    Y = Y + moveStep_forY
+    health = health - 1
+  }
+
+  def takeHealth: Unit = health = health / 2
+
+  def giveBirth: Creature = {
+    new Creature(X, Y, true, true, group)
+  }
+}
+
+
+
+
+
+
+
+
+
+
+object Simulation extends App {
+
+  var creatures: Seq[Creature] = Seq(
+    new Creature(349,349,true,true,"yellow"),
+    new Creature(349,349,true,true,"blue"),
+    new Creature(349,349,true,true,"green"),
+    new Creature(349,349,true,true,"pink"),
+    new Creature(349,349,true,true,"red"),
+    new Creature(349,349,true,true,"orange"))
+
+  val dots = Array.fill(30)(new java.awt.Point(335, 335))
+
+  val panel: Panel = new Panel {
+    def showObjects(g: Graphics2D): Unit = {
+      g.setPaint(Color.white)
+      g.fill(new Rectangle2D.Double(0, 0, size.width, size.height))
+
+      for(obj <- creatures) yield {
+        obj match{
+          case obj: Creature =>
+            g.setPaint(Color.black)
+            g.fill(new Ellipse2D.Double(obj.X - 2, obj.Y - 2, 3, 3))
+          case _ => println(s"Something else")
+        }
+      }
+    }
+
+    override def paint(g: Graphics2D): Unit = {
+      showObjects(g)
+    }
+    preferredSize = new Dimension(700, 700)
+  }
+
+  val window = new MainFrame {
     title = "Simulation"
     contents = panel
     centerOnScreen()
-  }
+  } //уже не трогаю
 
-frame.open()
-timer.start()
+  val temp = creatures.filter(_.generateReadiness)
 
+  val system = new javax.swing.Timer(10, Swing.ActionListener(
+    action => {
+      for (creature <- creatures) yield {
+        creature.randomMove
+      }
+      val newCreatures = for {
+          creature <- creatures
+          if creature.repFunction
+          if creature.generateReadiness
+        } yield {
+          creature.takeHealth
+          creature.giveBirth
+        }
 
-//  val frame = new MainFrame {
-//    title = "Simulation"
-//    contents = Button("Test button")(println("Test button was pressed"))
-//    size = new Dimension(500, 500)
-//    centerOnScreen
-//  }
-//
-//  frame.visible = true
+      def za(c: Creature): Boolean = {
+        if((c.health <= 0) || (c.illFunction && c.generateIllnesses)){false}
+        else{true}
+      }
+
+      creatures = creatures.filter(za(_)) ++ newCreatures
+//      println(creatures.size)
+//      if(creatures.size > 10000) creatures = creatures.slice(0,5000)
+      panel.repaint()
+    }))
+
+  window.open()
+  system.start()
 }
+

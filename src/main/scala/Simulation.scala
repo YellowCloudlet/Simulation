@@ -21,6 +21,7 @@ class Creature(x: Int,
   val illFunction: Boolean = illnesses
   val group: String = Group
 
+
   def generateReadiness: Boolean = {
     -range + rnd.nextInt(range-70) == -range + rnd.nextInt(range-70)
   }
@@ -56,25 +57,44 @@ class Creature(x: Int,
 object Simulation extends App {
 
   var creatures: Seq[Creature] = Seq(
-    new Creature(349,349,true,true,"yellow"),
-    new Creature(349,349,true,true,"blue"),
     new Creature(349,349,true,true,"green"),
-    new Creature(349,349,true,true,"pink"),
-    new Creature(349,349,true,true,"red"),
-    new Creature(349,349,true,true,"orange"))
+    new Creature(349,349,true,true,"red"))
 
-  val dots = Array.fill(30)(new java.awt.Point(335, 335))
+  //val dots = Array.fill(30)(new java.awt.Point(335, 335))
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   val panel: Panel = new Panel {
     def showObjects(g: Graphics2D): Unit = {
       g.setPaint(Color.white)
       g.fill(new Rectangle2D.Double(0, 0, size.width, size.height))
 
+      def color(arg: String): Unit = arg match {
+        case "yellow" => g.setPaint(Color.yellow)
+        case "blue" => g.setPaint(Color.blue)
+        case "green" => g.setPaint(Color.green)
+        case "pink" => g.setPaint(Color.pink)
+        case "red" => g.setPaint(Color.red)
+        case "orange" => g.setPaint(Color.orange)
+        case _ =>  g.setPaint(Color.black)
+      }
+
       for(obj <- creatures) yield {
         obj match{
           case obj: Creature =>
-            g.setPaint(Color.black)
-            g.fill(new Ellipse2D.Double(obj.X - 2, obj.Y - 2, 3, 3))
+            color(obj.group)
+            g.fill(new Ellipse2D.Double(obj.X - 2, obj.Y - 2, 10, 10))
           case _ => println(s"Something else")
         }
       }
@@ -86,13 +106,31 @@ object Simulation extends App {
     preferredSize = new Dimension(700, 700)
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   val window = new MainFrame {
     title = "Simulation"
     contents = panel
     centerOnScreen()
   } //уже не трогаю
 
-  val temp = creatures.filter(_.generateReadiness)
+  //val temp = creatures.filter(_.generateReadiness)
 
   val system = new javax.swing.Timer(10, Swing.ActionListener(
     action => {

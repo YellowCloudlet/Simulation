@@ -7,55 +7,52 @@ import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import java.io.File
 
+abstract class Creature{
+  def move()
+  def health: Int
+  def bud: Creature
+}
 
-
-class Creature(X: Int, Y: Int, HEALTH: Int, GROUP: String){
+case class Prey(X: Int, Y: Int) extends Creature {
   val random = new scala.util.Random
+  var (x , y, health) = (X, Y, 1)
 
-  var (x , y, group) = (X, Y, GROUP)
-  var health: Int = HEALTH
-  val reproductionThreshold = 100
-
-  def refreshHealth: Unit = health = 1
-  def decreaseHealth: Unit = {
-    health = health - 1
-  }
-  def increaseHealth: Unit = {
+  def move(): Unit = if(health > 0) {
+    x = x + -1 + random.nextInt(3)  
+    y = y + -1 + random.nextInt(3)
     health = health + 1
-  }
+  } else {}
 
-  def move: Unit = group match {
-    case "green" => {
-      x = x + -1 + random.nextInt(3)
-      y = y + -1 + random.nextInt(3)
-      increaseHealth
-    }
-    case "red" => {
-      x = x + -1 + random.nextInt(3)
-      y = y + -1 + random.nextInt(3)
-      decreaseHealth
-    }
-  }
-
-  def bud: Creature = {
-    new Creature(x, y, health,group)
+  def bud: Prey = {
+    health = 1
+    Prey(x, y)
   }
 }
 
+case class Predator(X: Int, Y: Int) extends Creature{
+  val random = new scala.util.Random
+  var (x , y, health) = (X, Y, 100)
 
+  def move(): Unit = if(health > 0) {
+    x = x + -1 + random.nextInt(3)
+    y = y + -1 + random.nextInt(3)
+    health = health - 1
+  } else {}
 
-
-
-
-
-
-
+//  def bud(prey: Prey): Predator = {
+//    health = health + prey.health
+//    Predator(prey.x, prey.y)
+//  }
+  def bud: Predator = {
+    Predator(x,y)
+  }
+}
 
 object Simulation extends App {
 
-  var creatures: Seq[Creature] = Seq(
-    new Creature(300,300,1,"green"),
-    new Creature(349,349,100,"red"))
+  var creatures: Vector[Creature] = Vector(
+    Prey(300,300),
+    Predator(349,349))
 
   val panel: Panel = new Panel {
 
@@ -66,19 +63,16 @@ object Simulation extends App {
 
     def showObjects(graphics: Graphics2D): Unit = {
       clearPanel(graphics)
-
-      def color(arg: String): Unit = arg match {
-        case "green" => graphics.setPaint(Color.green)
-        case "red" => graphics.setPaint(Color.red)
-        case _ =>  graphics.setPaint(Color.black)
-      }
-
       for(obj <- creatures) yield {
         obj match{
-          case obj: Creature =>
-            color(obj.group)
+          case obj: Prey => {
+            graphics.setPaint(Color.green)
             graphics.fill(new Ellipse2D.Double(obj.x - 2, obj.y - 2, 10, 10))
-          case _ => println(s"Something else")
+          }
+          case obj: Predator => {
+            graphics.setPaint(Color.red)
+            graphics.fill(new Ellipse2D.Double(obj.x - 2, obj.y - 2, 10, 10))
+          }
         }
       }
     }
@@ -87,7 +81,7 @@ object Simulation extends App {
       showObjects(graphics)
     }
 
-    preferredSize = new Dimension(1920, 1080)
+    preferredSize = new Dimension(700, 700)
 
   }
 
@@ -105,13 +99,12 @@ object Simulation extends App {
   val system = new javax.swing.Timer(10, Swing.ActionListener(
     action => {
       for (creature <- creatures) yield {
-        creature.move
+        creature.move()
       }
-      val newCreatures = for {
+      lazy val newCreatures = for {
           creature <- creatures
-          if creature.health == creature.reproductionThreshold
+          if creature.health == 100
         } yield {
-          creature.refreshHealth
           creature.bud
         }
 

@@ -4,6 +4,7 @@ import java.awt.Color
 import java.awt.geom.{Ellipse2D, Rectangle2D}
 import java.awt.image.BufferedImage
 
+import java.awt.Font
 import javax.imageio.ImageIO
 import java.io.File
 
@@ -18,7 +19,7 @@ case class Prey(X: Int, Y: Int) extends Creature {
   var (x , y, health) = (X, Y, 1)
 
   def move(): Unit = if(health > 0) {
-    x = x + -1 + random.nextInt(3)  
+    x = x + -1 + random.nextInt(3)
     y = y + -1 + random.nextInt(3)
     health = health + 1
   } else {}
@@ -31,7 +32,7 @@ case class Prey(X: Int, Y: Int) extends Creature {
 
 case class Predator(X: Int, Y: Int) extends Creature{
   val random = new scala.util.Random
-  var (x , y, health) = (X, Y, 100)
+  var (x , y, health) = (X, Y, 1000)
 
   def move(): Unit = if(health > 0) {
     x = x + -1 + random.nextInt(3)
@@ -54,6 +55,8 @@ object Simulation extends App {
     Prey(300,300),
     Predator(349,349))
 
+  def creaturesSize: Int = creatures.size
+
   val panel: Panel = new Panel {
 
     def clearPanel(graphics: Graphics2D): Unit = {
@@ -61,17 +64,24 @@ object Simulation extends App {
       graphics.fill(new Rectangle2D.Double(0, 0, size.width, size.height))
     }
 
+    def drawInformation(graphics: Graphics2D): Unit = {
+      graphics.setColor(new Color(0, 128, 0)) // a darker green
+      graphics.setFont(new Font("Batang", Font.PLAIN, 20))
+      graphics.drawString(s"Number of creatures: $creaturesSize", 30, 30)
+    }
+
     def showObjects(graphics: Graphics2D): Unit = {
       clearPanel(graphics)
+      drawInformation(graphics)
       for(obj <- creatures) yield {
         obj match{
           case obj: Prey => {
             graphics.setPaint(Color.green)
-            graphics.fill(new Ellipse2D.Double(obj.x - 2, obj.y - 2, 10, 10))
+            graphics.fill(new Rectangle2D.Double(obj.x - 2, obj.y - 2, 10, 10))
           }
           case obj: Predator => {
             graphics.setPaint(Color.red)
-            graphics.fill(new Ellipse2D.Double(obj.x - 2, obj.y - 2, 10, 10))
+            graphics.fill(new Rectangle2D.Double(obj.x - 2, obj.y - 2, 10, 10))
           }
         }
       }
@@ -96,7 +106,7 @@ object Simulation extends App {
 
 
 
-  val system = new javax.swing.Timer(10, Swing.ActionListener(
+  val system = new javax.swing.Timer(100, Swing.ActionListener(
     action => {
       for (creature <- creatures) yield {
         creature.move()

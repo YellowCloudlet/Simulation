@@ -16,6 +16,7 @@ case class Creature(xy: (Int, Int), g: String = "none"){
   var coordinates: (Int, Int) = xy
   var group: String = g
   var health: Int = 10000
+  var children: Int = 0
 }
 
 
@@ -83,6 +84,8 @@ object Simulation extends App {
   var new_creatures: Vector[Creature] = Vector.empty
 
   var iterations = 0
+
+  //var greenInRed = 0
 
   val panel: Panel = new Panel {  // панель для рисунка контента
 
@@ -169,10 +172,11 @@ object Simulation extends App {
         creature.group match {
           case "green" => {
             val x_T_y = (creature.coordinates._1 + -1 + Random.nextInt(3), creature.coordinates._2 + -1 + Random.nextInt(3))
-            val shansStatZlim = Random.nextInt(1000)
+            val shansStatZlim = Random.nextInt(1000)    // 10000 при 1234
             if (!present(x_T_y) && ramki(x_T_y)) {  //если клетка свободна и не выходит за рамки то можно двигататся
-              if (creature.health >= 10400) {       //если можно ещё и родить //поменять координаты, дать потомство и обновить хитпоинты
+              if (creature.health >= 10400 && creature.children < 2) {       //если можно ещё и родить //поменять координаты, дать потомство и обновить хитпоинты
                 creature.health = 10000                                                            // обновляем хитпоинты
+                creature.children = creature.children + 1
                 new_creatures = new_creatures ++ Vector(Creature(creature.coordinates,"green")) //сначала даем потомство на старых координатах
                 creature.coordinates = x_T_y                                                      //двигаемся на новые координаты
               }
@@ -182,8 +186,9 @@ object Simulation extends App {
               }
             }
             else if (present(x_T_y) && ramki(x_T_y)) {  //если клетка занята то стоим и при этом можем стать злым
-              if(shansStatZlim > 995){
+              if(shansStatZlim == 995){     //1234 - больше обьектов
                 creature.group = "red"
+                //greenInRed = greenInRed + 1
                 creature.coordinates = creature.coordinates
                 creature.health = creature.health - 1
               }
@@ -270,6 +275,7 @@ object Simulation extends App {
 //      println(predators.size)
       //println(creatures.size)
       //println(creatures(1).health)
+      //println(greenInRed)
       new_creatures = Vector.empty
       panel.repaint()
     }
